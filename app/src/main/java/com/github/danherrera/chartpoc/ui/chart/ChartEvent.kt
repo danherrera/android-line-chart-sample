@@ -12,7 +12,10 @@ sealed class ChartEvent : Event {
 
     sealed class DomainEvent : ChartEvent() {
         object StartTrackingData : DomainEvent()
-        data class LineDataUpdated(val xyCoordinates: List<Pair<Float, Float>>) : DomainEvent()
+        data class LineDataUpdated(
+            val line1: Line,
+            val line2: Line
+        ) : DomainEvent()
     }
 
     sealed class ViewModelEvent : ChartEvent() {

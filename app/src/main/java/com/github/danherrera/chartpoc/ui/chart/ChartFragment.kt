@@ -16,10 +16,8 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.fragment_chart.*
-import lecho.lib.hellocharts.model.Axis
+import lecho.lib.hellocharts.model.*
 import lecho.lib.hellocharts.model.Line
-import lecho.lib.hellocharts.model.LineChartData
-import lecho.lib.hellocharts.model.PointValue
 
 class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEffect> {
 
@@ -39,11 +37,11 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
             isScaleXEnabled = true
             isDragEnabled = true
             setPinchZoom(true)
-//            xAxis.axisMaximum = 500f
-//            xAxis.axisMinimum = 0f
-//            axisLeft.axisMaximum = 50_000f
-//            axisLeft.axisMinimum = -80_000f
-//            axisRight.isEnabled = false
+            xAxis.axisMaximum = 1f
+            xAxis.axisMinimum = -1f
+            axisLeft.axisMaximum = 0f
+            axisLeft.axisMinimum = -150f
+            axisRight.isEnabled = false
         }
 
         viewModel.bindClick(mpLineChart, ChartEvent.ViewEvent.ClickChart(ChartImplementation.MPAndroidChart))
@@ -64,37 +62,70 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
         when (state.chartImplementation) {
             ChartImplementation.MPAndroidChart -> {
                 mpLineChart.visibility = View.VISIBLE
-                mpLineChart.data = LineData(
-                    LineDataSet(state.xyCoordinates.map { Entry(it.first, it.second) }, "MPAndroidChart").apply {
-                        color = Color.BLACK
-                    }
-                )
-                mpLineChart.invalidate()
+                try {
+                    mpLineChart.data = LineData(
+                        LineDataSet(state.line1.coordinates.map { Entry(it.first, it.second) }, "Line 1").apply {
+                            color = state.line1.color
+                            highLightColor = state.line1.color
+                            lineWidth = 5f
+                        },
+                        LineDataSet(state.line2.coordinates.map { Entry(it.first, it.second) }, "Line 2").apply {
+                            color = state.line2.color
+                            highLightColor = state.line2.color
+                            lineWidth = 5f
+                        }
+                    )
+                    mpLineChart.notifyDataSetChanged()
+                    mpLineChart.invalidate()
+                } catch (e: Exception) {
+                    //ignore
+                }
             }
             ChartImplementation.HelloCharts -> {
                 helloLineChart.visibility = View.VISIBLE
 
                 try {
-                    val lines = mutableListOf<Line>()
+                    val line1Lines = mutableListOf<Line>()
                     var previousCoordinates: Pair<Float, Float>? = null
-                    state.xyCoordinates.forEach { (x, y) ->
+                    state.line1.coordinates.forEach { (x, y) ->
                         previousCoordinates?.let { (pX, pY) ->
-                            lines.add(
+                            line1Lines.add(
                                 Line(
                                     listOf(
                                         PointValue(pX, pY),
                                         PointValue(x, y)
                                     )
-                                )
+                                ).apply {
+                                    color = state.line1.color
+                                }
                             )
                         }
                         previousCoordinates = x to y
                     }
 
-                    helloLineChart.lineChartData = LineChartData(lines).apply {
+                    val line2Lines = mutableListOf<Line>()
+                    previousCoordinates = null
+                    state.line2.coordinates.forEach { (x, y) ->
+                        previousCoordinates?.let { (pX, pY) ->
+                            line1Lines.add(
+                                Line(
+                                    listOf(
+                                        PointValue(pX, pY),
+                                        PointValue(x, y)
+                                    )
+                                ).apply {
+                                    color = state.line2.color
+                                }
+                            )
+                        }
+                        previousCoordinates = x to y
+                    }
+
+                    helloLineChart.lineChartData = LineChartData(line1Lines).apply {
+                        val xAxisValues = listOf(-1f, -0.5f, 0f, 0.5f, 1.0f)
                         axisXBottom = Axis.generateAxisFromCollection(
-                            listOf(0f, 100f, 200f, 300f, 400f, 500f),
-                            listOf("0", "100", "200", "300", "400", "500")
+                            xAxisValues,
+                            xAxisValues.map { it.toString() }
                         )
                         val yAxisValues = (0..60_000 step 4_000).map { it.toFloat() }
                         axisYLeft = Axis.generateAxisFromCollection(

@@ -1,5 +1,7 @@
 package com.github.danherrera.chartpoc.ui.chart
 
+import android.graphics.Color
+import android.util.Log
 import com.github.danherrera.chartpoc.ui.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -12,28 +14,32 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
         if (intent is ChartEvent.DomainEvent.StartTrackingData) {
             launch {
                 withContext(Dispatchers.IO) {
-                    val coordinates = mutableListOf(
-                        2f to 3f,
-                        3f to 4f
+                    var line1X = 0f
+                    var line1Y = 0f
+                    val line1Coordinates = mutableListOf<Pair<Float, Float>>(
+//                        line1X to line1Y
                     )
-                    var x = 3f
-                    var y = 4f
+                    var line2X = 0f
+                    var line2Y = 0f
+                    val line2Coordinates = mutableListOf<Pair<Float, Float>>(
+//                        line2X to line2Y
+                    )
                     while (true) {
-                        x++
-                        y += when (x) {
-                            in 0f..250f -> x
-                            in 250f..500f -> -x
-                            else -> x
-                        }
+                        line1Y -= 0.1f
+                        line1X = Math.sin(0.95 * line1Y.toDouble()).toFloat()
+                        line1Coordinates.add(line1X to line1Y)
 
-                        coordinates.add(x to y)
+                        line2Y -= 0.1f
+                        line2X = Math.cos(0.5 * line1Y.toDouble()).toFloat()
+                        line2Coordinates.add(line2X to line2Y)
 
-                        delay(200L)
+                        delay(1000L)
 
                         withContext(Dispatchers.Main) {
                             next(
                                 ChartEvent.DomainEvent.LineDataUpdated(
-                                    coordinates
+                                    Line(Color.RED, line1Coordinates),
+                                    Line(Color.BLUE, line2Coordinates)
                                 )
                             )
                         }
@@ -52,7 +58,13 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
         }
     }
 
+    fun loggingMiddleware(event: ChartEvent, next: (ChartEvent) -> ChartState): ChartState {
+        Log.d(this::class.java.simpleName, "==> $event")
+        return next(event)
+    }
+
     init {
+        applyMiddleware(::loggingMiddleware)
         applyMiddleware(::chartDataMiddleware)
         applyMiddleware(::trackDataMiddleware)
         sendEvent(ChartEvent.ViewModelEvent.Created)
@@ -60,7 +72,10 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
 
     override fun reducer(state: ChartState, event: ChartEvent): ChartState {
         return when (event) {
-            is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(xyCoordinates = event.xyCoordinates)
+            is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(
+                line1 = event.line1,
+                line2 = event.line2
+            )
             is ChartEvent.ViewEvent.ClickChart -> state.copy(
                 chartImplementation = when (event.chartImplementation) {
                     ChartImplementation.MPAndroidChart -> ChartImplementation.HelloCharts
