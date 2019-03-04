@@ -1,5 +1,6 @@
 package com.github.danherrera.chartpoc.ui.chart
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +11,12 @@ import androidx.lifecycle.ViewModelProviders
 import com.github.danherrera.chartpoc.R
 import com.github.danherrera.chartpoc.ui.base.ViewWithEffect
 import com.github.danherrera.chartpoc.ui.base.bindState
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.fragment_chart.*
 
-class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartAction.ChartEffect> {
+class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEffect> {
 
     lateinit var viewModel: ChartViewModel
 
@@ -41,20 +45,24 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartAction.ChartEf
 
     override fun onResume() {
         super.onResume()
-        viewModel.sendIntent(ChartAction.UiAction.Resumed)
+        viewModel.sendEvent(ChartEvent.ViewEvent.Resumed)
     }
 
     override fun setState(state: ChartState) {
-        lineChart.data = state.lineData
+        lineChart.data = LineData(
+            LineDataSet(state.xyCoordinates.map { Entry(it.first, it.second) }, "MPAndroidChart").apply {
+                color = Color.BLACK
+            }
+        )
         lineChart.invalidate()
     }
 
-    override fun onEffect(effect: ChartAction.ChartEffect) {
+    override fun onEffect(effect: ChartEvent.ChartEffect) {
         when (effect) {
-            is ChartAction.ChartEffect.ShowToastWithResource -> {
+            is ChartEvent.ChartEffect.ShowToastWithResource -> {
                 Toast.makeText(context!!, effect.message, Toast.LENGTH_SHORT).show()
             }
-            is ChartAction.ChartEffect.ShowToast -> {
+            is ChartEvent.ChartEffect.ShowToast -> {
                 Toast.makeText(context!!, effect.message, Toast.LENGTH_SHORT).show()
             }
         }

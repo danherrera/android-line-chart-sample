@@ -1,25 +1,21 @@
 package com.github.danherrera.chartpoc.ui.chart
 
-import android.graphics.Color
 import com.github.danherrera.chartpoc.ui.base.BaseViewModel
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
-class ChartViewModel : BaseViewModel<ChartAction, ChartState>({ ChartState() }) {
+class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
 
-    private fun chartDataMiddleware(intent: ChartAction, next: (ChartAction) -> ChartState): ChartState {
-        if (intent is ChartAction.DomainAction.StartTrackingData) {
+    private fun chartDataMiddleware(intent: ChartEvent, next: (ChartEvent) -> ChartState): ChartState {
+        if (intent is ChartEvent.DomainEvent.StartTrackingData) {
             launch {
                 withContext(Dispatchers.IO) {
-                    val entries = mutableListOf(
-                        Entry(2f, 3f),
-                        Entry(3f, 4f)
+                    val coordinates = mutableListOf(
+                        2f to 3f,
+                        3f to 4f
                     )
                     var x = 3f
                     var y = 4f
@@ -31,15 +27,14 @@ class ChartViewModel : BaseViewModel<ChartAction, ChartState>({ ChartState() }) 
                             else -> x
                         }
 
-                        entries.add(Entry(x, y))
+                        coordinates.add(x to y)
 
                         delay(Random.nextLong(1, 2000))
 
                         withContext(Dispatchers.Main) {
                             next(
-                                ChartAction.DomainAction.LineDataUpdated(
-                                    LineData(
-                                        LineDataSet(entries, "My Chart").apply { color = Color.BLACK })
+                                ChartEvent.DomainEvent.LineDataUpdated(
+                                    coordinates
                                 )
                             )
                         }
@@ -50,10 +45,10 @@ class ChartViewModel : BaseViewModel<ChartAction, ChartState>({ ChartState() }) 
         return next(intent)
     }
 
-    private fun trackDataMiddleware(intent: ChartAction, next: (ChartAction) -> ChartState): ChartState {
+    private fun trackDataMiddleware(intent: ChartEvent, next: (ChartEvent) -> ChartState): ChartState {
         return next(intent).also {
-            if (intent is ChartAction.ViewModelAction.Created) {
-                next(ChartAction.DomainAction.StartTrackingData)
+            if (intent is ChartEvent.ViewModelEvent.Created) {
+                next(ChartEvent.DomainEvent.StartTrackingData)
             }
         }
     }
@@ -61,12 +56,12 @@ class ChartViewModel : BaseViewModel<ChartAction, ChartState>({ ChartState() }) 
     init {
         applyMiddleware(::chartDataMiddleware)
         applyMiddleware(::trackDataMiddleware)
-        sendIntent(ChartAction.ViewModelAction.Created)
+        sendEvent(ChartEvent.ViewModelEvent.Created)
     }
 
-    override fun reducer(state: ChartState, intent: ChartAction): ChartState {
-        return when (intent) {
-            is ChartAction.DomainAction.LineDataUpdated -> state.copy(lineData = intent.lineData)
+    override fun reducer(state: ChartState, event: ChartEvent): ChartState {
+        return when (event) {
+            is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(xyCoordinates = event.xyCoordinates)
             else -> state
         }
     }

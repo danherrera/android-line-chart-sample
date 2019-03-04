@@ -34,7 +34,7 @@ inline fun <S : State, V, reified E : Effect> BaseViewModel<*, S>.bindState(
     observeEffects(view, view::onEffect)
 }
 
-fun <I : Action, S : State> BaseViewModel<I, S>.bindClick(view: android.view.View, clickIntent: I) {
-    view.setOnClickListener { sendIntent(clickIntent) }
+fun <I : Event, S : State> BaseViewModel<I, S>.bindClick(view: android.view.View, clickIntent: I) {
+    view.setOnClickListener { sendEvent(clickIntent) }
 }
 

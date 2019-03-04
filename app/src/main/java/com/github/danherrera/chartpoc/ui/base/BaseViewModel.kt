@@ -11,7 +11,7 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-interface Action
+interface Event
 interface State
 interface Effect
 
@@ -37,16 +37,16 @@ interface ViewWithEffect<S : State, E : Effect> : View<S> {
     fun onEffect(effect: E)
 }
 
-typealias Middleware<I, S> = (intent: I, next: (intent: I) -> S) -> S
+typealias Middleware<I, S> = (event: I, next: (intent: I) -> S) -> S
 
-abstract class BaseViewModel<I : Action, S : State>(
+abstract class BaseViewModel<I : Event, S : State>(
     initialState: () -> S
 ) : ViewModel(), CoroutineScope {
     private val viewModelJob = Job()
 
     override val coroutineContext: CoroutineContext = Dispatchers.Main + viewModelJob
 
-    private val intentChannel = Channel<I>(Channel.UNLIMITED)
+    private val eventChannel = Channel<I>(Channel.UNLIMITED)
 
     private val stateMutableLiveData = MutableLiveData<S>()
     val stateLiveData: LiveData<S> = stateMutableLiveData
@@ -75,7 +75,7 @@ abstract class BaseViewModel<I : Action, S : State>(
                 new
             }
 
-            intentChannel.consumeEach { intent ->
+            eventChannel.consumeEach { intent ->
                 reducedMiddleware(intent) { middlewareIntent ->
                     if (middlewareIntent is Effect) {
                         effectMutableLiveData.postValue(EffectHolder(middlewareIntent))
@@ -91,12 +91,10 @@ abstract class BaseViewModel<I : Action, S : State>(
         middlewares.add(middleware)
     }
 
-    abstract fun reducer(state: S, intent: I): S
+    abstract fun reducer(state: S, event: I): S
 
-    fun sendIntent(intent: I) {
-        launch {
-            intentChannel.send(intent)
-        }
+    fun sendEvent(event: I) = launch {
+        eventChannel.send(event)
     }
 
     override fun onCleared() {
