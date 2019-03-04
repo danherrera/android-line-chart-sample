@@ -5,7 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.random.Random
 
 class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
 
@@ -29,7 +28,7 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
 
                         coordinates.add(x to y)
 
-                        delay(Random.nextLong(1, 2000))
+                        delay(200L)
 
                         withContext(Dispatchers.Main) {
                             next(
@@ -62,6 +61,12 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
     override fun reducer(state: ChartState, event: ChartEvent): ChartState {
         return when (event) {
             is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(xyCoordinates = event.xyCoordinates)
+            is ChartEvent.ViewEvent.ClickChart -> state.copy(
+                chartImplementation = when (event.chartImplementation) {
+                    ChartImplementation.MPAndroidChart -> ChartImplementation.HelloCharts
+                    ChartImplementation.HelloCharts -> ChartImplementation.MPAndroidChart
+                }
+            )
             else -> state
         }
     }

@@ -10,11 +10,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import com.github.danherrera.chartpoc.R
 import com.github.danherrera.chartpoc.ui.base.ViewWithEffect
+import com.github.danherrera.chartpoc.ui.base.bindClick
 import com.github.danherrera.chartpoc.ui.base.bindState
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.fragment_chart.*
+import lecho.lib.hellocharts.model.Axis
+import lecho.lib.hellocharts.model.Line
+import lecho.lib.hellocharts.model.LineChartData
+import lecho.lib.hellocharts.model.PointValue
 
 class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEffect> {
 
@@ -29,7 +34,7 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        lineChart.apply {
+        mpLineChart.apply {
             isScaleYEnabled = true
             isScaleXEnabled = true
             isDragEnabled = true
@@ -41,6 +46,8 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
 //            axisRight.isEnabled = false
         }
 
+        viewModel.bindClick(mpLineChart, ChartEvent.ViewEvent.ClickChart(ChartImplementation.MPAndroidChart))
+        viewModel.bindClick(helloLineChart, ChartEvent.ViewEvent.ClickChart(ChartImplementation.HelloCharts))
     }
 
     override fun onResume() {
@@ -49,12 +56,59 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
     }
 
     override fun setState(state: ChartState) {
-        lineChart.data = LineData(
-            LineDataSet(state.xyCoordinates.map { Entry(it.first, it.second) }, "MPAndroidChart").apply {
-                color = Color.BLACK
+        mpLineChart.visibility = View.GONE
+        helloLineChart.visibility = View.GONE
+
+        activity?.title = state.pageTitle
+
+        when (state.chartImplementation) {
+            ChartImplementation.MPAndroidChart -> {
+                mpLineChart.visibility = View.VISIBLE
+                mpLineChart.data = LineData(
+                    LineDataSet(state.xyCoordinates.map { Entry(it.first, it.second) }, "MPAndroidChart").apply {
+                        color = Color.BLACK
+                    }
+                )
+                mpLineChart.invalidate()
             }
-        )
-        lineChart.invalidate()
+            ChartImplementation.HelloCharts -> {
+                helloLineChart.visibility = View.VISIBLE
+
+                try {
+                    val lines = mutableListOf<Line>()
+                    var previousCoordinates: Pair<Float, Float>? = null
+                    state.xyCoordinates.forEach { (x, y) ->
+                        previousCoordinates?.let { (pX, pY) ->
+                            lines.add(
+                                Line(
+                                    listOf(
+                                        PointValue(pX, pY),
+                                        PointValue(x, y)
+                                    )
+                                )
+                            )
+                        }
+                        previousCoordinates = x to y
+                    }
+
+                    helloLineChart.lineChartData = LineChartData(lines).apply {
+                        axisXBottom = Axis.generateAxisFromCollection(
+                            listOf(0f, 100f, 200f, 300f, 400f, 500f),
+                            listOf("0", "100", "200", "300", "400", "500")
+                        )
+                        val yAxisValues = (0..60_000 step 4_000).map { it.toFloat() }
+                        axisYLeft = Axis.generateAxisFromCollection(
+                            yAxisValues,
+                            yAxisValues.map { it.toString() }
+                        )
+                    }
+                    helloLineChart.invalidate()
+                } catch (cme: ConcurrentModificationException) {
+                    //ignore: show last displayed state
+                }
+            }
+        }
+
     }
 
     override fun onEffect(effect: ChartEvent.ChartEffect) {

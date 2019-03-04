@@ -5,12 +5,23 @@
         android:layout_width="match_parent" android:layout_height="match_parent">
 
     <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/lineChart"
+            android:id="@+id/mpLineChart"
             android:layout_width="match_parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_height="0dp" android:layout_marginBottom="8dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/pauseToggleButton"/>
+
+    <lecho.lib.hellocharts.view.LineChartView
+            android:id="@+id/helloLineChart"
+            android:layout_width="match_parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toTopOf="@+id/pauseToggleButton"/>
 
     <SeekBar

@@ -7,6 +7,7 @@ sealed class ChartEvent : Event {
 
     sealed class ViewEvent : ChartEvent() {
         object Resumed : ViewEvent()
+        data class ClickChart(val chartImplementation: ChartImplementation) : ViewEvent()
     }
 
     sealed class DomainEvent : ChartEvent() {
