@@ -16,24 +16,20 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
                 withContext(Dispatchers.IO) {
                     var line1X = 0f
                     var line1Y = 0f
-                    val line1Coordinates = mutableListOf<Pair<Float, Float>>(
-//                        line1X to line1Y
-                    )
+                    val line1Coordinates = mutableListOf<Pair<Float, Float>>()
                     var line2X = 0f
                     var line2Y = 0f
-                    val line2Coordinates = mutableListOf<Pair<Float, Float>>(
-//                        line2X to line2Y
-                    )
+                    val line2Coordinates = mutableListOf<Pair<Float, Float>>()
                     while (true) {
-                        line1Y -= 0.1f
-                        line1X = Math.sin(0.95 * line1Y.toDouble()).toFloat()
+                        line1X += 0.1f
+                        line1Y = Math.sin(0.95 * line1X.toDouble()).toFloat()
                         line1Coordinates.add(line1X to line1Y)
 
-                        line2Y -= 0.1f
-                        line2X = Math.cos(0.5 * line1Y.toDouble()).toFloat()
+                        line2X += 0.1f
+                        line2Y = Math.cos(0.5 * line1X.toDouble()).toFloat()
                         line2Coordinates.add(line2X to line2Y)
 
-                        delay(1000L)
+                        delay(100L)
 
                         withContext(Dispatchers.Main) {
                             next(

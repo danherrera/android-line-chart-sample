@@ -37,11 +37,12 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
             isScaleXEnabled = true
             isDragEnabled = true
             setPinchZoom(true)
-            xAxis.axisMaximum = 1f
-            xAxis.axisMinimum = -1f
-            axisLeft.axisMaximum = 0f
-            axisLeft.axisMinimum = -150f
             axisRight.isEnabled = false
+            // Fixed chart viewport
+//            xAxis.axisMaximum = 1f
+//            xAxis.axisMinimum = -1f
+//            axisLeft.axisMaximum = 0f
+//            axisLeft.axisMinimum = -150f
         }
 
         viewModel.bindClick(mpLineChart, ChartEvent.ViewEvent.ClickChart(ChartImplementation.MPAndroidChart))
@@ -122,12 +123,12 @@ class ChartFragment : Fragment(), ViewWithEffect<ChartState, ChartEvent.ChartEff
                     }
 
                     helloLineChart.lineChartData = LineChartData(line1Lines).apply {
-                        val xAxisValues = listOf(-1f, -0.5f, 0f, 0.5f, 1.0f)
+                        val xAxisValues = (0..100).map { it.toFloat()/10f }
                         axisXBottom = Axis.generateAxisFromCollection(
                             xAxisValues,
                             xAxisValues.map { it.toString() }
                         )
-                        val yAxisValues = (0..60_000 step 4_000).map { it.toFloat() }
+                        val yAxisValues = (0..100).map { it.toFloat()/10f }
                         axisYLeft = Axis.generateAxisFromCollection(
                             yAxisValues,
                             yAxisValues.map { it.toString() }

@@ -12,7 +12,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/pauseToggleButton"/>
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
     <lecho.lib.hellocharts.view.LineChartView
             android:id="@+id/helloLineChart"
@@ -22,15 +22,6 @@
             app:layout_constraintTop_toTopOf="parent"
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/pauseToggleButton"/>
-
-    <SeekBar
-            android:id="@+id/pauseToggleButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="16dp" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="8dp"/>
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
