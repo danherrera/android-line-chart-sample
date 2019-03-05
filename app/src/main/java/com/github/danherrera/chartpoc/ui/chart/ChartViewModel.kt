@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.util.Log
 import com.github.danherrera.chartpoc.ui.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -20,22 +19,32 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
                     var line2X = 0f
                     var line2Y = 0f
                     val line2Coordinates = mutableListOf<Pair<Float, Float>>()
+                    var line3X = 0f
+                    var line3Y = 0f
+                    val line3Coordinates = mutableListOf<Pair<Float, Float>>()
                     while (true) {
                         line1X += 0.1f
-                        line1Y = Math.sin(0.95 * line1X.toDouble()).toFloat()
+                        line1Y = Math.sin(0.95 * line1X.toDouble()).toFloat() - 1f
                         line1Coordinates.add(line1X to line1Y)
 
                         line2X += 0.1f
-                        line2Y = Math.cos(0.5 * line1X.toDouble()).toFloat()
+                        line2Y = Math.cos(0.5 * line2X.toDouble()).toFloat()
                         line2Coordinates.add(line2X to line2Y)
 
-                        delay(100L)
+                        line3X += 0.1f
+                        line3Y = Math.sin(0.5 * line3X.toDouble()).toFloat() + 2f
+                        line3Coordinates.add(line3X to line3Y)
+
+//                        delay(1000L)
 
                         withContext(Dispatchers.Main) {
                             next(
                                 ChartEvent.DomainEvent.LineDataUpdated(
-                                    Line(Color.RED, line1Coordinates),
-                                    Line(Color.BLUE, line2Coordinates)
+                                    listOf(
+                                        Line("Line 1", Color.RED, line1Coordinates),
+                                        Line("Line 2", Color.BLUE, line2Coordinates),
+                                        Line("Line 3", Color.GREEN, line3Coordinates)
+                                    )
                                 )
                             )
                         }
@@ -68,16 +77,23 @@ class ChartViewModel : BaseViewModel<ChartEvent, ChartState>({ ChartState() }) {
 
     override fun reducer(state: ChartState, event: ChartEvent): ChartState {
         return when (event) {
-            is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(
-                line1 = event.line1,
-                line2 = event.line2
+            is ChartEvent.DomainEvent.LineDataUpdated -> state.copy(lines = event.lines)
+            is ChartEvent.ViewEvent.LineChartEvent.ValueSelected -> state.copy(
+                selectedValue = SelectedCoordinate(
+                    color = state.lines[event.lineIndex].color,
+                    x = event.x,
+                    y = event.y
+                )
             )
-            is ChartEvent.ViewEvent.ClickChart -> state.copy(
-                chartImplementation = when (event.chartImplementation) {
-                    ChartImplementation.MPAndroidChart -> ChartImplementation.HelloCharts
-                    ChartImplementation.HelloCharts -> ChartImplementation.MPAndroidChart
-                }
+            is ChartEvent.ViewEvent.LineChartEvent.NothingSelected -> state.copy(
+                selectedValue = null
             )
+//            is ChartEvent.ViewEvent.ClickChart -> state.copy(
+//                chartImplementation = when (event.chartImplementation) {
+//                    ChartImplementation.MPAndroidChart -> ChartImplementation.HelloCharts
+//                    ChartImplementation.HelloCharts -> ChartImplementation.MPAndroidChart
+//                }
+//            )
             else -> state
         }
     }
