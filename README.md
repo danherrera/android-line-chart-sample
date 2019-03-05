@@ -1,3 +1,3 @@
 # Android Line Chart Sample
 
-[Sample video](LineChartSample.webm)
+[Sample video](MPAndroidChartDemo.mp4)
